@@ -1,0 +1,52 @@
+{% extends 'user/home.html' %}
+
+{% block title %}List of Websites{% endblock %}
+
+{% block content %}
+    <div class="main-content" data-user-id="{{ user_id }}">
+        <h1>List of Websites</h1>
+        <div class="button-group">
+            <a href="{% url 'add_website' %}" class="add-customerbtn">Add Website</a>
+            <a href="{% url 'remove_website' %}" class="add-customerbtn">Remove Website</a>
+
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Website Info</th>
+                    <!-- <th>Actions</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in website_data %}
+                    <!-- Row for the main website -->
+                    <tr>
+                        <td>
+                            <a href="{% url 'website_info' entry.website_id %}">
+                                {{ entry.website_name }}
+                            </a>
+                        </td>
+                        <!-- <td>
+                            <a href="{% url 'update_website' entry.website_id %}" class="action-button">Update</a>
+                            <a href="{% url 'delete_website' entry.website_id %}" class="action-button delete-button">Delete</a>
+                        </td> -->
+                    </tr>
+
+                    <!-- Rows for subdomains -->
+                    <!-- Rows for subdomains -->
+                    <!-- {% for subdomain in entry.subdomains %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'subdomain_info' subdomain.id %}" class="subdomain-link">
+                                    {{ subdomain.subdomain_name }} 
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %} -->
+
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'home' %}" class="action-button">Back to Home</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'user/home.html' %}
+{% block content %}
+<div class="add-subdomain-container">
+    <h2>Add Subdomain for {{ website.website_name }}</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <p class="{% if message.tags == 'error' %}error-message{% elif message.tags == 'success' %}success-message{% endif %}">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-groups">
+            <label for="subdomain_name">Subdomain Name</label>
+            <!-- Container for side-by-side input fields -->
+            <div class="input-container">
+                <!-- Input box for user to type (no placeholder) -->
+                <input type="text" name="subdomain_name" class="right-align-placeholder" required>
+                
+                <!-- Readonly input box to display the website name with placeholder -->
+                <input type="text" id="website_name_display" value=".{{ website.website_name }}" readonly class="website-name-display" placeholder=".{{ website.website_name }}">
+            </div>
+        </div>
+        
+        <!-- <label for="php_version">PHP Version</label>
+            <select id="php_version" name="php_version" required>
+                <option value="" disabled selected>Select PHP Version</option>
+                {% for version in php_versions %}
+                    <option value="{{ version }}">{{ version }}</option>
+                {% endfor %}
+            </select> -->
+    
+        
+
+        <div class="form-groups">
+            <button type="submit" class="btn-submit">Add Subdomain</button>
+        </div>
+    </form>
+
+    <div class="back-link">
+        <a href="{% url 'list_subdomain' website.id %}">Back to List Subdomain</a>
+    </div>
+</div>
+{% endblock %}

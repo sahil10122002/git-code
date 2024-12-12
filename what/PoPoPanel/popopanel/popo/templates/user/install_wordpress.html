@@ -1,0 +1,757 @@
+{% extends 'user/home.html' %}
+
+{% block title %}Install WordPress{% endblock %}
+
+{% load static %}
+
+{% block content %}
+ 
+<div class="icon-containers">
+    <img src="{% static 'css/icons/wordpress.png' %}" alt="WordPress">
+</div>
+<div class="contant">
+    {% if messages %}
+        {% for message in messages %}
+            <p class="{% if message.tags == 'error' %}error-message{% elif message.tags == 'success' %}success-message{% endif %}">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    <div class="button-container">
+        <button id="openModalBtn" class="install-button">Plugins</button>
+        <button class="install-button" onclick="openCustomModal()">Themes</button>
+        <button class="install-button" onclick="openWordPressModal()">Install WordPress</button>
+        <form method="POST" action="{% url 'wp_auto_login' website.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="log" value="{{ wp_username }}">  <!-- WordPress username -->
+            <input type="hidden" name="pwd" value="{{ wp_password }}">  <!-- WordPress password -->
+            <button type="submit" class="install-button">Login WordPress</button>  
+        </form>
+        <!-- Uninstall WordPress Button -->
+        <form method="POST" action="{% url 'uninstall_wordpress' website.id %}" onsubmit="return confirmUninstall();">
+            {% csrf_token %}
+            <button type="submit" class="install-button">Uninstall WordPress</button>
+        </form>
+
+    </div>
+</div>
+
+
+
+
+<!-- Modal structure -->
+<div id="customThemeModal" class="theme-modal">
+    <div class="theme-modal-content">
+        <span class="theme-modal-close" onclick="closeCustomModal()">&times;</span>
+        <!-- <h2>Manage Themes</h2> -->
+
+        <!-- Button to open upload form -->
+        <button class="upload-theme-button" onclick="showUploadForm()">Upload Themes</button>
+
+        <!-- Button to list themes -->
+        <button class="upload-theme-button" onclick="listCustomThemes()">List Themes</button>
+        <button id="searchThemesBtn" class="upload-theme-button" onclick="toggleSearchSection()">Search Themes</button>
+
+        <!-- Upload Form -->
+        <form id="uploadThemeForm" method="post" enctype="multipart/form-data" action="{% url 'upload_theme' website_id=website.id %}" style="display: none; margin-top: 20px;">
+            {% csrf_token %}
+            <input type="file" name="theme_zip" accept=".zip" required>
+            <button type="submit" class="upload-button">Upload</button>
+        </form>
+
+        <!-- Container for listing themes -->
+        <div id="themesContainer" style="display: none; margin-top: 20px;"></div>
+
+        <!-- Search Themes Section -->
+        <div id="searchSections" style="display: none; margin-top: 20px;">
+            <form id="searchForms">
+                <input type="text" id="themeQuery" placeholder="Enter theme name" required>
+                <button type="submit">Search</button>
+            </form>
+            <div id="searchResult"></div>
+        </div>
+    </div> <!-- End of theme-modal-content -->
+</div>
+
+
+
+<!-- Modal Structure -->
+<div id="uploadModal" class="custom-modal" style="display: none;">
+    <div class="modal-contents">
+        <span id="closeModalBtn" class="close" style="cursor: pointer;">&times;</span>
+
+        <!-- Buttons inside the Modal -->
+        <div class="form-group">
+            <button id="uploadPluginBtn" class="btn btn-primary">Upload Plugin</button>
+            <button id="listPluginsBtn" class="btn btn-secondary">List Plugins</button>
+            <button  id= 'searchPluginsBtn' class="btn btn-primary">Search Plugins</button>
+            <div id="searchSection" class="search-section" style="display: none;">
+                <!-- Search Form -->
+                <form id="searchForm" method="GET">
+                    <input type="text" id="pluginQuery" name="query" placeholder="Enter plugin name" required>
+                    <button type="submit">Search</button>
+                </form>
+
+                <!-- Results will be displayed here -->
+                <div id="searchResults" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Upload Plugin Form (Initially Hidden) -->
+        <div id="uploadPluginForm" style="display: none; margin-top: 20px;">
+            <form action="{% url 'upload_file' website_id=website.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="zip_file">Choose ZIP File:</label>
+                    <input type="file" id="zip_file" name="zip_file" accept=".zip" required>
+                </div>
+                <button type="submit" class="btn btn-success">Upload Plugin</button>
+            </form>
+        </div>
+
+        <!-- Plugin List (Initially Hidden) -->
+        <div id="pluginList" style="display: none; margin-top: 20px;">
+            <h5>Available Plugins:</h5>
+            <!-- Plugin list will be populated here -->
+        </div>
+    </div>
+</div>
+
+<!-- WordPress Install Modal -->
+<div id="wordpressInstallModal" class="wordpress-modal">
+    <div class="wordpress-modal-content">
+        <span class="close-modal" onclick="closeWordPressModal()">&times;</span>
+        <div class="h5">
+            <h5>WordPress Administrator</h5>
+        </div>
+        <!-- Form for WordPress Installation -->
+        <form id="wordpressForm" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="wp-username">WP Username</label>
+                <input type="text" id="wp-username" name="wp_username" value="{{ wp_username }}" required>
+            </div>
+            <div class="form-group">
+                <label for="wp-password">WP Password</label>
+                <input type="text" id="wp-password" name="wp_password" value="{{ wp_password }}" required>
+            </div>
+
+            <div class="h6">
+                <h6>Database Details</h6>
+            </div>
+            <div class="form-group">
+                <label for="wp-database-name">Database Name</label>
+                <input type="text" id="wp-database-name" name="wp_database_name" value="{{ wp_database_name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="wp-database-user">Database User</label>
+                <input type="text" id="wp-database-user" name="wp_database_user" value="{{ wp_database_user }}" required>
+            </div>
+            <div class="form-group">
+                <label for="wp-database-pass">Database Password</label>
+                <input type="text" id="wp-database-pass" name="wp_database_pass" value="{{ wp_database_pass }}" >
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" onclick="closeWordPressModal()">Cancel</button>
+                <button type="button" onclick="submitWordPressForm()">Install WordPress</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- JavaScript for handling modal opening/closing and AJAX form submission -->
+<script>
+
+
+
+    function confirmUninstall() {
+        if (confirm("Are you sure you want to uninstall WordPress? This action cannot be undone.")) {
+            alert("WordPress uninstalled successfully!");
+            return true; // Proceed with the form submission
+        }
+        return false; // Cancel the form submission
+    }
+
+
+
+// Event listener for the "Search Plugins" button
+document.getElementById('searchPluginsBtn').addEventListener('click', function() {
+    document.getElementById('searchSection').style.display = 'block';
+});
+
+// JavaScript code for the form submission
+document.getElementById('searchForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const query = document.getElementById('pluginQuery').value;
+        const resultsDiv = document.getElementById('searchResults');
+
+        // Clear previous results
+        resultsDiv.innerHTML = '';
+
+        // Ensure websiteId is defined
+        const websiteId = {{ website.id }};  // Ensure this is correct in your template
+
+        // Make an AJAX request to the server for plugin search
+        fetch(`/search-plugin/${websiteId}/?query=${query}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.plugins && data.plugins.length > 0) {
+                    let resultsHtml = '<ul>';
+                    data.plugins.forEach(plugin => {
+                        resultsHtml += `
+                            <li>
+                                <strong>${plugin.name}</strong> (Rating: ${plugin.rating}) 
+                                
+                                <button class="btn btn-success" onclick="installPlugin('${plugin.slug}', {{ website.id }})">Install</button>
+
+                            </li>`;
+                    });
+                    resultsHtml += '</ul>';
+                    resultsDiv.innerHTML = resultsHtml; 
+                } else {
+                    resultsDiv.innerHTML = '<p>No plugins found.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = '<p>Error occurred while searching.</p>';
+            });
+    });
+
+
+// Function to handle plugin installation
+function installPlugin(slug, websiteId) {
+    // Send an AJAX request to install the plugin
+    fetch(`/install-plugin/${websiteId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',  // Ensure this is rendered by Django
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ slug: slug })  // Send the slug in the request body
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert(`${slug} installed successfully!`);
+        } else {
+            alert(`Failed to install ${slug}: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error occurred during plugin installation.');
+    });
+}
+
+
+
+
+// Show search section when 'Search Plugins' is clicked
+document.getElementById('searchThemesBtn').addEventListener('click', function() {
+    themesContainer.style.display = 'none';
+    uploadThemeForm.style.display = 'none';
+    document.getElementById('searchSections').style.display = 'block';
+});
+
+document.getElementById('searchForms').addEventListener('submit', function(e) {
+    e.preventDefault();  // Prevent the default form submission
+
+    const query = document.getElementById('themeQuery').value;  // Get the search query
+    const resultsDiv = document.getElementById('searchResult');  // Get the results div
+
+    // Clear previous results
+    resultsDiv.innerHTML = '';
+
+    // Ensure websiteId is defined (from Django context)
+    const websiteId = {{ website.id }}; // Assuming this is passed in your template
+
+    // Make an AJAX request to the server with website_id
+    fetch(`/search-themes/${websiteId}/?query=${query}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Check if there are themes returned
+            if (data.themes && data.themes.length > 0) {
+                let resultsHtml = '<ul>';
+                data.themes.forEach(theme => {
+                    resultsHtml += `
+                        <li>
+                            <strong>${theme.name}</strong> (Rating: ${theme.rating})
+                            <button class="btn btn-success" onclick="installTheme('${theme.slug}', ${websiteId})">Install</button>
+                        </li>`;
+                });
+                resultsHtml += '</ul>';
+                resultsDiv.innerHTML = resultsHtml;  // Insert results into the modal
+            } else {
+                resultsDiv.innerHTML = '<p>No themes found.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultsDiv.innerHTML = '<p>Error occurred while searching.</p>';
+        });
+});
+
+
+    function installTheme(slug, websiteId) {
+
+    fetch(`/install-theme/${websiteId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',  
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ slug: slug })    
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`${slug} installed successfully!`);
+        } else {
+            alert(`Failed to install ${slug}: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error occurred during theme installation.');
+    });
+}
+
+
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const searchPluginsBtn = document.getElementById("searchPluginsBtn");
+    const searchSection = document.getElementById("searchSection");
+    const pluginList = document.getElementById("pluginList");
+    const uploadPluginForm = document.getElementById("uploadPluginForm");
+    const performSearchBtn = document.getElementById("performSearchBtn");
+    const searchInput = document.getElementById("searchInput");
+    const searchResults = document.getElementById("searchResults");
+
+    // Function to hide the search section
+    function hideSearchSection() {
+        searchSection.style.display = "none"; // Hide search section
+    }
+
+    // When "Upload Plugin" button is clicked
+    document.getElementById("uploadPluginBtn").addEventListener("click", function () {
+        hideSearchSection();
+        pluginList.style.display = "none";
+        uploadPluginForm.style.display = "block"; // Show upload form 
+    });
+
+    // When "List Plugins" button is clicked
+    document.getElementById("listPluginsBtn").addEventListener("click", function () {
+        hideSearchSection();
+        uploadPluginForm.style.display = "none"; // Hide upload form
+        pluginList.style.display = "block"; // Show plugin list 
+    });
+
+    // When "Search Plugins" button is clicked
+    searchPluginsBtn.onclick = function() {
+        pluginList.style.display = "none"; // Hide plugin list
+        uploadPluginForm.style.display = "none"; // Hide upload form
+        searchSection.style.display = "block"; // Show search section
+    };
+
+    // Perform search when search button is clicked
+    performSearchBtn.onclick = function() {
+        const query = searchInput.value.trim();
+        if (query) {
+            fetch(`/manage-plugins/?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear previous results
+                    searchResults.innerHTML = '';
+
+                    if (data.plugins) {
+                        data.plugins.forEach(plugin => {
+                            const pluginDiv = document.createElement('div');
+                            pluginDiv.textContent = plugin.name;
+                            if (!plugin.is_installed) {
+                                const installButton = document.createElement('button');
+                                installButton.textContent = "Install";
+                                installButton.onclick = function() {
+                                    installPlugin(plugin.slug);
+                                };
+                                pluginDiv.appendChild(installButton);
+                            }
+                            searchResults.appendChild(pluginDiv);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching plugins:', error);
+                });
+        }
+    };
+
+    function installPlugin(pluginSlug) {
+        fetch(`/manage-plugins/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `plugin_slug=${pluginSlug}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message || data.error);
+        })
+        .catch(error => {
+            console.error('Error installing plugin:', error);
+        });
+    }
+
+    // Optional: Handle closing the modal
+    document.getElementById("closeModalBtn").addEventListener("click", function () {
+        document.getElementById("uploadModal").style.display = "none";
+        hideSearchSection();
+        pluginList.style.display = "none"; // Hide plugin list when modal is closed
+        uploadPluginForm.style.display = "none"; // Hide upload form when modal is closed
+    });
+});
+
+
+
+// Open Modal when "Search Plugins" button is clicked
+// Open Modal when "Search Plugins" button is clicked
+
+
+    // Get elements
+    var openModalBtn = document.getElementById('openModalBtn');
+    var uploadModal = document.getElementById('uploadModal');
+    var closeModalBtn = document.getElementById('closeModalBtn');
+    var uploadPluginBtn = document.getElementById('uploadPluginBtn');
+    var listPluginsBtn = document.getElementById('listPluginsBtn');
+    var uploadPluginForm = document.getElementById('uploadPluginForm');
+    var pluginList = document.getElementById('pluginList');
+
+    // Open the modal
+    openModalBtn.onclick = function() {
+        uploadModal.style.display = "block";
+    };
+
+    // Close the modal
+    closeModalBtn.onclick = function() {
+        uploadModal.style.display = "none";
+    };
+
+    // Click "Upload Plugin" button
+    uploadPluginBtn.onclick = function() {
+        pluginList.style.display = "none"; // Hide plugin list
+        uploadPluginForm.style.display = "block"; // Show upload form
+        
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const listPluginsBtn = document.getElementById('listPluginsBtn');
+        const uploadPluginForm = document.getElementById('uploadPluginForm');
+        const pluginList = document.getElementById('pluginList');
+
+        listPluginsBtn.onclick = function() {
+            uploadPluginForm.style.display = "none"; // Hide upload form
+            pluginList.style.display = "block"; // Show plugin list
+            
+
+            // Fetch plugin list from the server
+            fetch("{% url 'list_plugins' website_id=website.id %}")
+            .then(response => response.json())
+            .then(data => {
+                pluginList.innerHTML = "";  // Clear previous content
+
+                if (data.plugins && data.plugins.length > 0) {
+                    let pluginHtml = "<table class='table table-bordered'>";
+                    pluginHtml += "<thead><tr><th>Name</th><th>Status</th><th>Version</th></tr></thead><tbody>";
+
+                    // Iterate through each plugin and create a row for it
+                    data.plugins.forEach(plugin => {
+                        const isActive = plugin.status === 'active';
+                        pluginHtml += `<tr>
+                            <td>${plugin.name}</td>
+                            <td>
+                                <label class="switch">
+                                    <input type="checkbox" onchange="togglePlugin('${plugin.name}', this)" id="${plugin.name}-status" ${isActive ? 'checked' : ''}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </td>
+                            
+                            <td>${plugin.version}</td>
+                            
+                        </tr>`;
+                    });
+
+                    pluginHtml += "</tbody></table>";
+                    pluginList.innerHTML = pluginHtml;
+                } else {
+                    pluginList.innerHTML = "<p>No plugins found.</p>";
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching plugin list:', error);
+                pluginList.innerHTML = "<p>Error loading plugins.</p>";
+            });
+        };
+    });
+
+    function togglePlugin(pluginName, checkbox) {
+        const action = checkbox.checked ? 'activate' : 'deactivate';
+
+        // Make a request to activate or deactivate the plugin
+        fetch(`{% url 'toggle_plugin' website_id=website.id %}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',  // Include CSRF token for POST requests
+            },
+            body: JSON.stringify({ plugin: pluginName, action: action })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(`Plugin ${action}d successfully.`);
+            } else {
+                console.error('Error toggling plugin:', data.error);
+                checkbox.checked = !checkbox.checked; // Revert checkbox state if there was an error
+            }
+        })
+        .catch(error => {
+            console.error('Error toggling plugin:', error);
+            checkbox.checked = !checkbox.checked; // Revert checkbox state if there was an error
+        });
+    }
+
+function showUploadForm() {
+    const uploadForm = document.getElementById("uploadThemeForm");
+    const themesContainer = document.getElementById("themesContainer");
+
+
+    themesContainer.style.display = "none";
+
+    if (uploadForm.style.display === "none" || uploadForm.style.display === "") {
+        searchSections.style.display = "none";
+        uploadForm.style.display = "block";
+    } else {
+        uploadForm.style.display = "none";
+    }
+}
+
+function uploadTheme() {
+    const form = document.getElementById('uploadThemeForm');
+    const formData = new FormData(form);
+
+    // Extract the website ID from the form's action URL
+    const actionUrl = form.action; // Get the action URL
+    // Extract the website ID from the URL
+
+    formData.append('website_id', websiteId); // Append the website ID to the form data
+
+    // Send the form data via AJAX
+    fetch("{% url 'upload_theme' website.id %}", {  // Make sure this URL points to the correct endpoint
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')  // Include CSRF token for security
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();  // Parse JSON response
+    })
+    .then(data => {
+        // Display message in the modal
+        document.getElementById('modalMessage').textContent = data.message;
+
+        // Show modal based on success or failure
+        const themeModal = document.getElementById('themeModal');
+        if (data.success) {
+            themeModal.style.backgroundColor = '#d4edda'; // Light green for success
+        } else {
+            themeModal.style.backgroundColor = '#f8d7da'; // Light red for error
+        }
+
+        themeModal.style.display = 'block';  // Show the modal
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('modalMessage').textContent = "An error occurred: " + error;
+        document.getElementById('themeModal').style.display = 'block';  // Show the modal
+    });
+}
+
+
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Check if this cookie string begins with the name we want
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Function to open the modal
+function openCustomModal() {
+  document.getElementById("customThemeModal").style.display = "block";
+}
+
+// Function to close the modal
+function closeCustomModal() {
+  document.getElementById("customThemeModal").style.display = "none";
+}
+
+// Close the modal if the user clicks anywhere outside the modal
+window.onclick = function(event) {
+  const modal = document.getElementById("customThemeModal");
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+function listCustomThemes() {
+    const themesContainer = document.getElementById('themesContainer');
+    const uploadForm = document.getElementById("uploadThemeForm");
+
+    // Hide the upload form
+    uploadForm.style.display = "none";
+    searchSections.style.display = "none";
+
+
+    // If the themes container is already visible, hide it
+    if (themesContainer.style.display === 'block') {
+        themesContainer.style.display = 'none';
+        return;  // Stop further execution if the container is already visible
+    }
+
+    // Fetch the list of themes from the backend
+    fetch("{% url 'list_themes' website_id=website.id %}")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                console.error(data.error);
+                alert('Error loading themes: ' + data.error);
+                return;
+            }
+
+            // Create the table structure for displaying the themes
+            let themesTable = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Update</th>
+                            <th>Version</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            // Populate the table with the themes data
+            data.forEach(theme => {
+                themesTable += `
+                    <tr>
+                        <td>${theme.name}</td>
+                        <td>${theme.status}</td>
+                        <td>${theme.update}</td>
+                        <td>${theme.version}</td>
+                    </tr>`;
+            });
+
+            themesTable += '</tbody></table>';
+
+            // Display the table in the themesContainer
+            themesContainer.innerHTML = themesTable; 
+            themesContainer.style.display = 'block'; // Show the container
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+            alert('Error loading themes. Please try again later.');
+        });
+}
+
+
+
+
+    // Close modal if user clicks outside the modal content
+    window.onclick = function(event) {
+        if (event.target == uploadModal) {
+            uploadModal.style.display = "none";
+        }
+    }
+
+    function openWordPressModal() {
+        document.getElementById("wordpressInstallModal").style.display = "block";
+    }
+
+    function closeWordPressModal() {
+        document.getElementById("wordpressInstallModal").style.display = "none";
+    }
+
+    function submitWordPressForm() {
+        const form = document.getElementById("wordpressForm");
+        const formData = new FormData(form);  // Capture the form data
+        const websiteId = "{{ website.id }}"; // Get website ID from template
+        const csrfToken = '{{ csrf_token }}'; // Include CSRF token
+
+        // Perform the AJAX request
+        fetch(`/install_wordpress/${websiteId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message and close modal
+                alert('WordPress installed successfully!');
+                closeWordPressModal();
+            } else {
+                // Show error message
+                alert(`Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An unexpected error occurred.');
+        });
+    }
+
+</script>
+
+{% endblock %}

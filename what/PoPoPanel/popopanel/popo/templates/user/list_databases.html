@@ -1,0 +1,196 @@
+{% extends 'user/home.html' %}
+
+{% block title %}Databases for {{ website.website_name }}{% endblock %}
+
+{% block content %}
+<div class="main-content">
+        <h1>Databases for {{ website.website_name }}</h1>
+        <a href="{% url 'add_database' website.id %}" class="add-database">Add Database</a>
+    <div class="database-list">
+        {% if messages %}
+            {% for message in messages %}
+                <p class="{% if message.tags == 'error' %}error-message{% elif message.tags == 'success' %}success-message{% endif %}">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+        {% if databases %}
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>Database Name</th>
+                        <th>Username</th>
+                        <th>Connection Info</th>
+                        <th>phpMyAdmin</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for database in databases %}
+                        <tr>
+                            <td>{{ database.name }}</td>
+                            <td>{{ database.user }}</td>
+                            <td>
+                                <a href="#" class="connection-info" 
+                                   data-db-name="{{ database.name }}" 
+                                   data-db-user="{{ database.user }}" 
+                                   data-db-password="{{ database.password }}" 
+                                   onclick="openDatabaseModal(this)">
+                                   View Connection Info
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'redirect_to_phpmyadmin' %}?pma_username={{ database.user }}&pma_password={{ database.password }}&db={{ database.name }}" class="phpmyadmin-login" target="_blank">
+                                    Login to phpMyAdmin
+                                </a>
+                            </td>
+                            <td>
+                                <form action="{% url 'remove_database' website.id database.id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="remove-database" onclick="return confirm('Are you sure you want to remove this database?')">Remove Database</button>
+                                </form>
+                            </td>  
+                            
+                                                      
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No databases available for this website.</p>
+        {% endif %}
+    </div>
+</div>
+
+    <!-- Database Modal HTML -->
+    <div id="databaseModal" class="modal">
+        <div class="modal-contentt">
+            <span class="close">&times;</span>
+            <h2>Database Connection Info</h2>
+            <p><strong>Database Name:</strong> <span id="db-name"></span></p>
+            <p><strong>Username:</strong> <span id="db-user"></span></p>
+            <p><strong>Password:</strong> <span id="db-password">********</span></p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal CSS (Make sure this is unique for each modal) -->
+<style>
+    /* Table Styling */
+    .customer-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .customer-table th, .customer-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .customer-table th {
+        width:200px;
+        background-color: #db5b5b;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .customer-table tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .connection-info {
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    .connection-info:hover {
+        text-decoration: underline;
+    }
+
+    /* Modal Styling */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-contentt {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 300px;
+    text-align: center;
+    border-radius: 10px;
+}
+
+    .modal-content h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .modal-content p {
+        font-size: 18px;
+        margin: 10px 0;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .database-list  {
+        text-align: center;
+        font-size: 18px;
+        color: #666;
+        width: 80%;
+    }
+</style>
+
+<script>
+    // Function to open the database modal and display the database info
+    function openDatabaseModal(el) {
+        const dbName = el.getAttribute('data-db-name');
+        const dbUser = el.getAttribute('data-db-user');
+        const dbPassword = el.getAttribute('data-db-password');
+
+        document.getElementById('db-name').textContent = dbName;
+        document.getElementById('db-user').textContent = dbUser;
+        document.getElementById('db-password').textContent = '********'; // Display password as masked
+
+        // Show the database modal
+        document.getElementById('databaseModal').style.display = 'block';
+    }
+
+    // Close the modal when the user clicks the "x" or outside the modal
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const modal = document.getElementById('databaseModal');
+        const closeBtn = document.getElementsByClassName('close')[0];
+
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    });
+</script>
+{% endblock %}

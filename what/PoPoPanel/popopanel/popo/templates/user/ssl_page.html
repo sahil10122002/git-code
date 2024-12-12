@@ -1,0 +1,22 @@
+{% extends 'user/home.html' %}
+
+{% block title %}SSL Page{% endblock %}
+
+{% block content %}
+<body>
+    {% if messages %}
+        {% for message in messages %}
+            <p class="{% if message.tags == 'error' %}error-message{% elif message.tags == 'success' %}success-message{% endif %}">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    <div style="text-align: center; margin-top: 20px;">
+        <form action="{% url 'setup_domain' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="website_id" value="{{ website_id }}">
+            <button type="submit" style="padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">
+                Install Let's Encrypt SSL
+            </button>
+        </form>
+    </div>
+</body>
+{% endblock %}

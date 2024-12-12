@@ -1,0 +1,19 @@
+{% extends 'user/home.html' %}
+
+{% block title %}Delete Website{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <h1 class="title">Select Website to Delete</h1>
+    <form action="{% url 'remove_website' %}" method="post" class="delete-website-form">
+        {% csrf_token %}
+        <label for="website" class="form-label">Choose a website:</label>
+        <select name="website" id="website" class="website-select" required>
+            {% for website in websites %}
+                <option value="{{ website.id }}">{{ website.website_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="delete-button">Delete</button>
+    </form>
+</div>
+{% endblock %}

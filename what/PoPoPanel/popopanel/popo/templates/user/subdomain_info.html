@@ -1,0 +1,50 @@
+{% extends 'user/home.html' %}
+
+{% block title %}Website Details{% endblock %}
+
+{% load static %}
+
+{% block content %}
+<div class="main-content">
+    <div class="image-container">
+        <img src="{% static 'path/to/your/image.png' %}" alt="Your Image">
+    </div>
+    <div class="heading">
+        <h1>
+            Subdomain Details: {{ subdomain.subdomain_name }}
+        </h1>
+    </div>
+    <div class="icons-container">
+        <div class="icon-wrapper">
+            <a href="{% url 'ftp_users' website.id %}" title="FTP" class="icon-link">
+                <img src="{% static 'css/icons/ftp_icon.png' %}" alt="FTP" class="icon">
+            </a>
+            <a href="{% url 'ftp_users' website.id %}" class="icon-label" title="FTP">FTP</a>
+        </div>
+        <div class="icon-wrapper">
+            <a href="{% url 'list_databases' website.id %}" title="Database" class="icon-link">
+                <img src="{% static 'css/icons/database_icon.png' %}" alt="Database" class="icon">
+            </a>
+            <a href="{% url 'list_databases' website.id %}" class="icon-label" title="Database">Database</a>
+        </div>
+        <div class="icon-wrapper">
+            <a href="{% url 'update_php_version' website.id %}" title="PHP" class="icon-link">
+                <img src="{% static 'css/icons/php_icon.png' %}" alt="PHP" class="icon">
+            </a>
+            <a href="{% url 'update_php_version' website.id %}" class="icon-label" title="PHP"> PHP</a>
+        </div>
+        <div class="icon-wrapper">
+            <a href="{% url 'file_manager' website.id %}" title="File Manager" class="icon-link">
+                <img src="{% static 'css/icons/filemanager.png' %}" alt="File Manager" class="icon">
+            </a>
+            <a href="{% url 'file_manager' website.id %}" class="icon-label" title="File Manager">File Manager</a>
+        </div>
+        <div class="icon-wrapper">
+            <a href="{% url 'add_subdomain' website.id %}" title="Subdomain" class="icon-link">
+                <img src="{% static 'css/icons/subdomain_icon.png' %}" alt="Subdomain" class="icon">
+            </a>
+            <a href="{% url 'add_subdomain' website.id %}" class="icon-label" title="Subdomain">Subdomain</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

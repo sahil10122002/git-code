@@ -1,0 +1,125 @@
+{% extends 'user/home.html' %}
+
+{% block title %}Website Details{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <style>
+        /* Global Styles */
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f4f9;
+        }
+
+        .main-content {
+            max-width: 800px;
+            padding: 20px;
+            margin-left: 90px;
+            text-align: center;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Style the button container to arrange buttons side by side */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Adds space between the buttons */
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #logs-container {
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 20px;
+            font-family: monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border-radius: 4px;
+            text-align: left;
+            display: none; /* Initially hide the logs container */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            #logs-container {
+                padding: 15px;
+            }
+        }
+    </style>
+
+    <div class="main-content">
+        <h1>Website Logs for {{ website.website_name }}</h1>
+        <div class="button-container">
+            <button onclick="fetchAccessLogs({{ website.id }})">Fetch Access Logs</button>
+            <button onclick="fetchErrorLogs({{ website.id }})">Fetch Error Logs</button>
+        </div>
+        <div id="logs-container"></div>
+    </div>
+
+    <script>
+        function fetchAccessLogs(websiteId) {
+            fetch(`/logs/${websiteId}/access/`)
+                .then(response => response.text())
+                .then(html => {
+                    const logsContainer = document.getElementById('logs-container');
+                    logsContainer.innerHTML = `<pre>${html}</pre>`;
+                    logsContainer.style.display = 'block'; // Show logs container after fetching logs
+                })
+                .catch(err => alert("Error fetching access logs: " + err));
+        }
+
+        function fetchErrorLogs(websiteId) {
+            fetch(`/logs/${websiteId}/error/`)
+                .then(response => response.text())
+                .then(html => {
+                    const logsContainer = document.getElementById('logs-container');
+                    logsContainer.innerHTML = `<pre>${html}</pre>`;
+                    logsContainer.style.display = 'block'; // Show logs container after fetching logs
+                })
+                .catch(err => alert("Error fetching error logs: " + err));
+        }
+    </script>
+
+{% endblock %}

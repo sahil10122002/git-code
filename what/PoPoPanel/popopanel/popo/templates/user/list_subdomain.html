@@ -1,0 +1,80 @@
+{% extends 'user/home.html' %}
+
+{% block title %}Update Website{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="icon-wrapper">
+        <h3>Subdomains for {{ website.website_name }}</h3>
+        <div class="button-group">
+            <a href="{% url 'add_subdomain' website.id %}" class="add-customerbtn">Add Subdomain</a>
+        </div>
+
+        <!-- Table to display subdomains -->
+        <table class="subdomain-table">
+            <thead>
+                <tr>
+                    <th>Subdomain Name</th>
+                    <th>PHP Version</th>
+                    <th>FTP Username</th>
+                    <th>FTP Password</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subdomain in subdomains %}
+                <tr>
+                    <td>
+                        <!-- Link for Subdomain Name -->
+                        {{ subdomain.subdomain_name }}
+                    </td>
+                    <td>{{ subdomain.php_version }}</td>
+                    <td>{{ subdomain.subdomainftpuser }}</td>
+                    <td>{{ subdomain.subdomainftppass }}</td>
+                    <td>
+                        <!-- Link for removing subdomain -->
+                        <a href="{% url 'remove_subdomain' subdomain.id %}" class="remove-link">Remove</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No subdomains found for this website.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<style>
+    .subdomain-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .subdomain-table th, .subdomain-table td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+
+    .subdomain-table th {
+        background-color: #f4f4f4;
+    }
+
+    .subdomain-table td {
+        background-color: #fff;
+    }
+
+    .subdomain-link {
+        color: #007bff;  /* Link color */
+        text-decoration: none;
+    }
+
+    .subdomain-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
+{% endblock %}

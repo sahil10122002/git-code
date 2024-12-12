@@ -1,0 +1,62 @@
+{% extends 'user/home.html' %}
+
+{% block title %}Add Website{% endblock %}
+
+{% block content %}
+    
+    <div class="main-content">
+        <div class="form-container">
+            <h2>Add Website</h2>
+            {% if messages %}
+                {% for message in messages %}
+                    <p class="{% if message.tags == 'error' %}error-message{% elif message.tags == 'success' %}success-message{% endif %}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+            <form method="POST" action="{% url 'add_website' %}">
+                {% csrf_token %}
+                {% if user_id %}
+                    <input type="hidden" name="user_id" value="{{ user_id }}">
+                {% endif %}
+                <label for="customer_email">Select Customer</label>
+                <select id="customer_email" name="customer_email" required>
+                    <option value="" disabled selected>Select Customer</option>
+                    {% for customer in customers %}
+                        <option value="{{ customer.email }}">{{ customer.email }}</option>
+                    {% endfor %}
+                </select>
+                <a href="{% url 'add_customer' %}" class="add-customer-link">Create new Customer</a>
+
+                <label for="website_name">Website Name</label>
+                <input type="text" id="website_name" name="website_name" required>
+
+                <label for="ftp_username">FTP Username</label>
+                <input type="text" id="ftp_username" name="ftp_username" required>
+
+                <label for="ftp_password">FTP Password</label>
+                <input type="password" id="ftp_password" name="ftp_password" required>
+
+                <label for="ftp_confirm_password">Confirm FTP Password</label>
+                <input type="password" id="ftp_confirm_password" name="ftp_confirm_password" required>
+
+                <label for="php_version">PHP Version</label>
+                <select id="php_version" name="php_version" required>
+                    <option value="" disabled selected>Select PHP Version</option>
+                    {% for version in php_versions %}
+                        <option value="{{ version }}">{{ version }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="database_allowed">Database Allowed</label>
+                <input type="number" id="database_allowed" name="database_allowed" required>
+
+                <div class="button-group">
+                    <button type="submit" class="submit-button">Submit</button>
+                    <!-- <button type="button" class="cancel-button" onclick="window.location.href='{% url 'home' %}'">Cancel</button> -->
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+
+
