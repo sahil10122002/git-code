@@ -92,17 +92,21 @@ WSGI_APPLICATION = 'popopanel.wsgi.application'
 # }
 
 # mysql username- root ,passwd- sahil00 
-DATABASES = {
 
-     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'popo',
-        'USER': 'sahil',
-        'PASSWORD': 'rashmit@123',
-        'HOST': 'localhost',  
-        'PORT': '3306',
-     }
- }
+# Database Credentials
+# DATABASES = {
+
+#      'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'popo',
+#         'USER': 'sahil',
+#         'PASSWORD': 'rashmit@123',
+#         'HOST': 'localhost',  
+#         'PORT': '3306',
+#      }
+#  }
+
+# Database Credentials end 
  
 # ssl live server
 # DATABASES = {
